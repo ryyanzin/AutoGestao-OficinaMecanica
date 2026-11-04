@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Cadastro de Clientes da Oficina</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+
+<style>
+  /* Layout: ficha de cliente à esquerda, lista de clientes à direita. No celular, uma coluna. */
+  :root {
+    --fundo: #e9edf1;
+    --superficie: #ffffff;
+    --texto: #18222d;
+    --texto-suave: #55636f;
+    --linha: #cbd4dc;
+    --macacao: #1c4f8a;
+    --sobre-macacao: #ffffff;
+    --erro: #b3261e;
+    --sucesso: #1d6b43;
+    --etiqueta-fundo: #fbeec9;
+    --etiqueta-texto: #6d4d05;
+    --fonte-titulo: "Barlow Semi Condensed", "Arial Narrow", Arial, sans-serif;
+    --fonte-texto: "Barlow", "Segoe UI", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fundo: #11171e;
+      --superficie: #1a222b;
+      --texto: #e8edf2;
+      --texto-suave: #a2afba;
+      --linha: #33404c;
+      --macacao: #8db9f2;
+      --sobre-macacao: #0e1a29;
+      --erro: #ff9d94;
+      --sucesso: #7ed6a5;
+      --etiqueta-fundo: #4a3a12;
+      --etiqueta-texto: #f6dc9c;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fundo: #11171e;
+    --superficie: #1a222b;
+    --texto: #e8edf2;
+    --texto-suave: #a2afba;
+    --linha: #33404c;
+    --macacao: #8db9f2;
+    --sobre-macacao: #0e1a29;
+    --erro: #ff9d94;
+    --sucesso: #7ed6a5;
+    --etiqueta-fundo: #4a3a12;
+    --etiqueta-texto: #f6dc9c;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: var(--fonte-texto);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .pagina {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-block: 32px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid;
+    gap: 24px;
+  }
+  h1, h2 { font-family: var(--fonte-titulo); font-weight: 700; line-height: 1.1; margin: 0; text-wrap: balance; }
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 1.4rem; }
+  .sigla {
+    margin: 0 0 4px;
+    color: var(--texto-suave);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .colunas {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  .ficha {
+    background: var(--macacao);
+    color: var(--sobre-macacao);
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+  }
+  .campo { display: grid; gap: 4px; }
+  .campo label { font-weight: 600; }
+  .campo input {
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit;
+    color: var(--texto);
+    background: var(--superficie);
+    border: 2px solid transparent;
+    border-radius: 2px;
+  }
+  .campo input[aria-invalid="true"] { border-color: var(--erro); }
+  .campo .erro {
+    background: var(--superficie);
+    color: var(--erro);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 4px 8px;
+  }
+  button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 2px; }
+  .botao-cadastrar {
+    padding: 12px;
+    font-family: var(--fonte-titulo);
+    font-size: 1.15rem;
+    color: var(--texto);
+    background: var(--superficie);
+    border: 2px solid var(--superficie);
+  }
+  .botao-cadastrar:hover { background: transparent; color: var(--sobre-macacao); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--texto); outline-offset: 2px; }
+  .ficha button:focus-visible, .ficha input:focus-visible { outline-color: var(--sobre-macacao); }
+  .lista { display: grid; gap: 12px; min-width: 0; }
+  .lista-topo { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; }
+  .contador { color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+  .aviso { min-height: 1.5em; margin: 0; color: var(--sucesso); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; background: var(--superficie); }
+  th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--linha); overflow-wrap: anywhere; }
+  th {
+    color: var(--texto-suave);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .numero, .telefone { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .numero { color: var(--texto-suave); }
+  .etiqueta {
+    margin-left: 6px;
+    padding: 1px 6px;
+    background: var(--etiqueta-fundo);
+    color: var(--etiqueta-texto);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .vazio { padding: 24px 12px; background: var(--superficie); color: var(--texto-suave); margin: 0; }
+  .limpeza { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .limpeza span { color: var(--texto-suave); }
+  .botao-secundario {
+    padding: 6px 12px;
+    color: var(--texto);
+    background: transparent;
+    border: 1px solid var(--linha);
+  }
+  .botao-secundario:hover { border-color: var(--texto); }
+  .botao-perigo { color: var(--erro); border-color: var(--erro); }
+
+  @media (max-width: 760px) {
+    .colunas { grid-template-columns: minmax(0, 1fr); }
+    h1 { font-size: 1.9rem; }
+    /* No celular, cada cliente vira um bloco em vez de uma linha da tabela */
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tr { padding: 8px 0; border-bottom: 1px solid var(--linha); }
+    td { padding: 2px 12px; border: 0; }
+    .telefone { white-space: normal; }
+  }
+</style>
+
+<div class="pagina">
+  <header>
+    <p class="sigla">Oficina · US01</p>
+    <h1>Cadastro de Clientes</h1>
+  </header>
+
+  <div class="colunas">
+    <form id="formulario" class="ficha" novalidate>
+      <h2>Novo cliente</h2>
+
+      <div class="campo">
+        <label for="nome">Nome</label>
+        <input id="nome" name="nome" type="text" autocomplete="off" aria-describedby="erro-nome" required>
+        <div id="erro-nome" class="erro" hidden></div>
+      </div>
+
+      <div class="campo">
+        <label for="telefone">Telefone com DDD</label>
+        <input id="telefone" name="telefone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 98888-7777" aria-describedby="erro-telefone" required>
+        <div id="erro-telefone" class="erro" hidden></div>
+      </div>
+
+      <div class="campo">
+        <label for="endereco">Endereço</label>
+        <input id="endereco" name="endereco" type="text" autocomplete="off" aria-describedby="erro-endereco" required>
+        <div id="erro-endereco" class="erro" hidden></div>
+      </div>
+
+      <button id="cadastrar" class="botao-cadastrar" type="submit">Cadastrar</button>
+    </form>
+
+    <section class="lista" aria-labelledby="titulo-lista">
+      <div class="lista-topo">
+        <h2 id="titulo-lista">Clientes cadastrados</h2>
+        <span id="contador" class="contador"></span>
+      </div>
+
+      <p id="aviso" class="aviso" role="status"></p>
+
+      <table id="tabela">
+        <thead>
+          <tr>
+            <th scope="col">Nº</th>
+            <th scope="col">Nome</th>
+            <th scope="col">Telefone</th>
+            <th scope="col">Endereço</th>
+          </tr>
+        </thead>
+        <tbody id="linhas"></tbody>
+      </table>
+
+      <p id="vazio" class="vazio" hidden>Nenhum cliente cadastrado. Preencha a ficha e clique em Cadastrar.</p>
+
+      <div class="limpeza">
+        <button id="limpar" class="botao-secundario" type="button">Limpar lista</button>
+        <span id="confirmacao-texto" hidden>Apagar todos os clientes?</span>
+        <button id="confirmar-limpeza" class="botao-secundario botao-perigo" type="button" hidden>Apagar todos</button>
+        <button id="cancelar-limpeza" class="botao-secundario" type="button" hidden>Cancelar</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  // Nome usado para guardar a lista no navegador
+  const CHAVE = "oficina.clientes";
+
+  // Clientes fictícios que aparecem na primeira vez que a página abre
+  const EXEMPLOS = [
+    { nome: "Marina Lopes", telefone: "(11) 98888-7777", endereco: "Rua das Oficinas, 120, São Paulo", exemplo: true },
+    { nome: "Carlos Andrade", telefone: "(11) 3333-4444", endereco: "Av. Central, 45, São Paulo", exemplo: true }
+  ];
+
+  // Lê a lista salva. Se o navegador bloquear o acesso, usa os exemplos.
+  function carregarClientes() {
+    try {
+      const salvo = localStorage.getItem(CHAVE);
+      if (salvo !== null) return JSON.parse(salvo);
+    } catch (erro) {
+      console.warn("Não foi possível ler os clientes salvos.", erro);
+    }
+    return EXEMPLOS.slice();
+  }
+
+  // Salva a lista. Se falhar, ela continua na memória até a página fechar.
+  function salvarClientes() {
+    try {
+      localStorage.setItem(CHAVE, JSON.stringify(clientes));
+    } catch (erro) {
+      console.warn("Não foi possível salvar os clientes.", erro);
+    }
+  }
+
+  // Lista de clientes usada pela página
+  let clientes = carregarClientes();
+
+  // Atalho para buscar um elemento pelo id
+  const el = (id) => document.getElementById(id);
+
+  // Devolve só os dígitos: "(11) 98888-7777" vira "11988887777"
+  function somenteDigitos(texto) {
+    return texto.replace(/\D/g, "");
+  }
+
+  // Formata o telefone com 10 ou 11 dígitos
+  function formatarTelefone(digitos) {
+    const ddd = digitos.slice(0, 2);
+    const meio = digitos.slice(2, -4);
+    const fim = digitos.slice(-4);
+    return "(" + ddd + ") " + meio + "-" + fim;
+  }
+
+  // Regra da US01: nome, telefone e endereço são obrigatórios.
+  // Devolve um objeto com a mensagem de erro de cada campo inválido.
+  function validar(nome, telefone, endereco) {
+    const erros = {};
+    const digitos = somenteDigitos(telefone);
+
+    if (nome === "") erros.nome = "Informe o nome do cliente.";
+
+    if (telefone === "") {
+      erros.telefone = "Informe o telefone do cliente.";
+    } else if (digitos.length < 10 || digitos.length > 11) {
+      erros.telefone = "Digite o telefone com DDD: 10 ou 11 números.";
+    }
+
+    if (endereco === "") erros.endereco = "Informe o endereço do cliente.";
+
+    return erros;
+  }
+
+  // Mostra ou esconde a mensagem de erro de um campo
+  function mostrarErro(campo, mensagem) {
+    const entrada = el(campo);
+    const caixa = el("erro-" + campo);
+
+    caixa.textContent = mensagem || "";
+    caixa.hidden = !mensagem;
+
+    if (mensagem) entrada.setAttribute("aria-invalid", "true");
+    else entrada.removeAttribute("aria-invalid");
+  }
+
+  // Desenha a lista de clientes na tela
+  function mostrarClientes() {
+    const linhas = el("linhas");
+    linhas.textContent = "";
+
+    clientes.forEach((cliente, indice) => {
+      const linha = document.createElement("tr");
+
+      const numero = document.createElement("td");
+      numero.className = "numero";
+      numero.textContent = String(indice + 1).padStart(3, "0");
+
+      const nome = document.createElement("td");
+      nome.textContent = cliente.nome;
+      if (cliente.exemplo) {
+        const etiqueta = document.createElement("span");
+        etiqueta.className = "etiqueta";
+        etiqueta.textContent = "Exemplo";
+        nome.appendChild(etiqueta);
+      }
+
+      const telefone = document.createElement("td");
+      telefone.className = "telefone";
+      telefone.textContent = cliente.telefone;
+
+      const endereco = document.createElement("td");
+      endereco.textContent = cliente.endereco;
+
+      linha.append(numero, nome, telefone, endereco);
+      linhas.appendChild(linha);
+    });
+
+    const total = clientes.length;
+    el("contador").textContent = total === 1 ? "1 cliente" : total + " clientes";
+    el("tabela").hidden = total === 0;
+    el("vazio").hidden = total > 0;
+    el("limpar").disabled = total === 0;
+  }
+
+  // Executa quando o funcionário clica em Cadastrar
+  function cadastrar(evento) {
+    evento.preventDefault();
+    el("aviso").textContent = "";
+
+    // trim() remove espaços, assim um campo só com espaços conta como vazio
+    const nome = el("nome").value.trim();
+    const telefone = el("telefone").value.trim();
+    const endereco = el("endereco").value.trim();
+
+    const erros = validar(nome, telefone, endereco);
+    mostrarErro("nome", erros.nome);
+    mostrarErro("telefone", erros.telefone);
+    mostrarErro("endereco", erros.endereco);
+
+    // Se houver erro, leva o cursor ao primeiro campo inválido e não cadastra
+    const primeiroErro = ["nome", "telefone", "endereco"].find((campo) => erros[campo]);
+    if (primeiroErro) {
+      el(primeiroErro).focus();
+      return;
+    }
+
+    clientes.push({ nome, telefone: formatarTelefone(somenteDigitos(telefone)), endereco });
+    salvarClientes();
+    mostrarClientes();
+
+    el("formulario").reset();
+    el("nome").focus();
+    el("aviso").textContent = "Cliente cadastrado: " + nome;
+  }
+
+  // Mostra ou esconde a pergunta de confirmação da limpeza
+  function pedirConfirmacao(mostrar) {
+    el("limpar").hidden = mostrar;
+    el("confirmacao-texto").hidden = !mostrar;
+    el("confirmar-limpeza").hidden = !mostrar;
+    el("cancelar-limpeza").hidden = !mostrar;
+  }
+
+  // Liga os botões às funções
+  el("formulario").addEventListener("submit", cadastrar);
+  el("limpar").addEventListener("click", () => pedirConfirmacao(true));
+  el("cancelar-limpeza").addEventListener("click", () => pedirConfirmacao(false));
+  el("confirmar-limpeza").addEventListener("click", () => {
+    clientes = [];
+    salvarClientes();
+    mostrarClientes();
+    pedirConfirmacao(false);
+    el("aviso").textContent = "Lista apagada.";
+  });
+
+  // Limpa o erro assim que o funcionário volta a digitar no campo
+  ["nome", "telefone", "endereco"].forEach((campo) => {
+    el(campo).addEventListener("input", () => mostrarErro(campo, ""));
+  });
+
+  // Mostra a lista ao abrir a página
+  mostrarClientes();
+</script>
+</body>
+</html>
